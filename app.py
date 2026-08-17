@@ -1205,5 +1205,3 @@ HTML_CODE = """
 """
 
 components.html(HTML_CODE, height=880, scrolling=True)
-```text:의존성 패키지 목록:requirements.txt
-streamlit>=1.28.0
