@@ -1,0 +1,1210 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(
+    page_title="중2 수학: 삼각형의 외심 탐구 학습",
+    page_icon="📐",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+st.markdown("""
+    <style>
+        /* Streamlit 기본 패딩 및 여백 제거하여 웹앱 화면 최대화 */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+            max-width: 100% !important;
+        }
+        header[data-testid="stHeader"] {
+            display: none !important;
+        }
+        footer {
+            display: none !important;
+        }
+        #MainMenu {
+            visibility: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+HTML_CODE = """
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼각형의 외심 탐구 앱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            user-select: none;
+        }
+        .grid-bg {
+            background-color: #f8fafc;
+            background-image: 
+                linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; stroke-width: 2px; }
+            50% { opacity: 1; stroke-width: 6px; }
+        }
+        .pulse-target {
+            animation: pulse-glow 1.5s infinite ease-in-out;
+        }
+        circle {
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-indigo-600 text-white shadow-md py-3 px-6 flex justify-between items-center z-10">
+        <div class="flex items-center space-x-3">
+            <div class="bg-white text-indigo-600 p-2 rounded-lg font-bold shadow-inner flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 2" />
+                    <polygon points="12,3 4.2,16.5 19.8,16.5" stroke="currentColor" stroke-width="2" fill="none" />
+                    <circle cx="12" cy="12" r="2" fill="#ef4444" stroke="none" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">중2 수학: 삼각형의 외심(Outer Center) 탐구</h1>
+                <p class="text-xs text-indigo-200">직접 점을 찍고 선을 그으며 외심의 성질을 확인해봅시다!</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="resetAllBtn" class="bg-indigo-700 hover:bg-indigo-800 text-white text-sm px-3 py-1.5 rounded-lg flex items-center space-x-1 transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span>처음부터 다시하기</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Split Layout -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- Left Step-by-Step Guidance Panel -->
+        <aside class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-10 shadow-lg max-h-screen md:max-h-none overflow-y-auto">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="font-bold text-slate-700 flex items-center gap-2">
+                    <div class="bg-indigo-100 p-1.5 rounded-lg text-indigo-600 flex items-center justify-center border border-indigo-200">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2.5 2" />
+                            <polygon points="12,3.5 4.5,16.5 19.5,16.5" stroke="currentColor" stroke-width="2" fill="none" />
+                            <circle cx="12" cy="12" r="1.8" fill="#ef4444" stroke="none" />
+                        </svg>
+                    </div>
+                    학습 단계 (Step-by-Step)
+                </h2>
+                <span id="stepBadge" class="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full">
+                    1 / 5 단계 진행 중
+                </span>
+            </div>
+
+            <!-- Steps Container -->
+            <div class="p-4 space-y-4 flex-1">
+                
+                <!-- Step 1 -->
+                <div id="stepCard1" class="step-card border-2 border-indigo-500 bg-indigo-50/50 p-4 rounded-xl transition-all shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div id="stepNum1" class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0">1</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-sm">삼각형 ABC 그리기</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                오른쪽 모눈종이에 <strong class="text-indigo-600">세 개의 점</strong>을 찍어 삼각형 ABC를 만드세요.
+                            </p>
+                            <div class="mt-2 text-xs font-semibold text-indigo-700 bg-indigo-100/70 py-1 px-2.5 rounded-md inline-block" id="step1Status">
+                                남은 점: 3개 클릭 필요
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div id="stepCard2" class="step-card border-2 border-slate-200 bg-slate-50 p-4 rounded-xl opacity-60 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="stepNum2" class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-sm">세 변의 수직이등분선 그리기</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                삼각형의 <strong class="text-indigo-600">세 변(AB, BC, CA)을 각각 하나씩 누르면</strong> 각 변의 수직이등분선이 그려집니다.
+                            </p>
+                            <div id="step2Progress" class="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
+                                <span id="sideABBadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">변 AB</span>
+                                <span id="sideBCBadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">변 BC</span>
+                                <span id="sideCABadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">변 CA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div id="stepCard3" class="step-card border-2 border-slate-200 bg-slate-50 p-4 rounded-xl opacity-60 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="stepNum3" class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-sm">외심(점 O) 찾기</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                세 수직이등분선이 <strong class="text-red-500">한 점에서 만나는 교점</strong>을 클릭하여 외심 점 <strong class="text-red-600 font-bold">O</strong>를 표시하세요.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div id="stepCard4" class="step-card border-2 border-slate-200 bg-slate-50 p-4 rounded-xl opacity-60 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="stepNum4" class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0">4</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-sm">외심과 세 꼭짓점 연결하기</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                <strong class="text-indigo-600">점 O를 누른 후 꼭짓점 A, B, C를 각각 눌러</strong> 선분 OA, OB, OC를 그리세요.
+                            </p>
+                            <div id="step4Progress" class="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
+                                <span id="segOABadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">선분 OA</span>
+                                <span id="segOBBadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">선분 OB</span>
+                                <span id="segOCBadge" class="py-1 bg-slate-200 rounded text-slate-500 font-medium">선분 OC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div id="stepCard5" class="step-card border-2 border-slate-200 bg-slate-50 p-4 rounded-xl opacity-60 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="stepNum5" class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0">5</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-sm">선분의 길이 측정 및 성질 확인</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                그린 선분 <strong class="text-amber-600">OA, OB, OC를 눌러</strong> 각 길이를 측정하고 비교해 보세요.
+                            </p>
+                            <div id="step5Progress" class="mt-2 space-y-1 text-xs">
+                                <div class="flex justify-between items-center bg-slate-200 p-1.5 rounded" id="lenOABox">
+                                    <span>선분 OA 길이:</span>
+                                    <span class="font-bold text-indigo-700" id="valOA">미측정</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-slate-200 p-1.5 rounded" id="lenOBBox">
+                                    <span>선분 OB 길이:</span>
+                                    <span class="font-bold text-indigo-700" id="valOB">미측정</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-slate-200 p-1.5 rounded" id="lenOCBox">
+                                    <span>선분 OC 길이:</span>
+                                    <span class="font-bold text-indigo-700" id="valOC">미측정</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discovery Conclusion Box (Initially Hidden) -->
+                <div id="conclusionBox" class="hidden bg-emerald-50 border-2 border-emerald-500 p-4 rounded-xl text-xs space-y-3 shadow-md">
+                    <div class="flex items-center space-x-2 text-emerald-800 font-bold text-sm">
+                        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>🎉 탐구 성공! 외심의 성질 발견</span>
+                    </div>
+                    <ul class="list-disc list-inside text-emerald-900 space-y-1.5 font-medium leading-relaxed">
+                        <li>삼각형의 세 변의 수직이등분선은 한 점 <strong class="text-red-600 font-bold">O(외심)</strong>에서 만납니다.</li>
+                        <li>외심에서 세 꼭짓점에 이르는 거리는 같습니다! <br><strong class="bg-emerald-200 px-2 py-0.5 rounded text-emerald-900 inline-block mt-1 font-bold"><span style="text-decoration: overline;">OA</span> = <span style="text-decoration: overline;">OB</span> = <span style="text-decoration: overline;">OC</span></strong></li>
+                    </ul>
+                    <!-- Button to proceed to Summary Stage -->
+                    <button id="goToSummaryBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs">
+                        <span>📖 정리 단계로 이동하기</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Summary Stage Card (Shows in Step 6) -->
+                <div id="summarySection" class="hidden space-y-4">
+                    <div class="border-2 border-indigo-600 bg-indigo-50/80 p-4 rounded-xl space-y-3 shadow-md">
+                        <div class="flex items-center justify-between border-b border-indigo-200 pb-2">
+                            <h3 class="font-bold text-indigo-900 text-sm flex items-center gap-1.5">
+                                🎓 외심 개념 최종 정리
+                            </h3>
+                            <span class="text-[10px] bg-indigo-200 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full">정리 완료</span>
+                        </div>
+                        
+                        <div class="space-y-2.5 text-xs text-slate-700">
+                            <div class="bg-white p-2.5 rounded-lg border border-indigo-100 shadow-sm space-y-1">
+                                <div class="font-bold text-indigo-700 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> 1. 외심의 정의
+                                </div>
+                                <p class="text-slate-600 leading-relaxed pl-2.5">
+                                    삼각형의 **세 변의 수직이등분선의 교점**입니다.
+                                </p>
+                            </div>
+                            
+                            <div class="bg-white p-2.5 rounded-lg border border-indigo-100 shadow-sm space-y-1">
+                                <div class="font-bold text-indigo-700 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> 2. 외심의 핵심 성질
+                                </div>
+                                <p class="text-slate-600 leading-relaxed pl-2.5">
+                                    외심에서 **세 꼭짓점에 이르는 거리는 모두 같습니다.**
+                                </p>
+                                <div class="text-center font-bold text-amber-800 bg-amber-50 py-1 rounded border border-amber-200 mt-1">
+                                    <span style="text-decoration: overline;">OA</span> = <span style="text-decoration: overline;">OB</span> = <span style="text-decoration: overline;">OC</span> = 외접원 반지름
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-2.5 rounded-lg border border-indigo-100 shadow-sm space-y-1.5">
+                                <div class="font-bold text-indigo-700 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span> 3. 삼각형 모양별 외심의 위치
+                                </div>
+                                <ul class="space-y-1 text-slate-600 text-[11px] pl-1">
+                                    <li class="flex justify-between items-center bg-slate-50 p-1.5 rounded">
+                                        <span>🔹 예각삼각형</span>
+                                        <span class="font-bold text-indigo-600">내부</span>
+                                    </li>
+                                    <li class="flex justify-between items-center bg-slate-50 p-1.5 rounded">
+                                        <span>🔹 직각삼각형</span>
+                                        <span class="font-bold text-indigo-600">빗변의 중점</span>
+                                    </li>
+                                    <li class="flex justify-between items-center bg-slate-50 p-1.5 rounded">
+                                        <span>🔹 둔각삼각형</span>
+                                        <span class="font-bold text-indigo-600">외부</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Action Controls in Summary -->
+                        <div class="pt-1 space-y-2">
+                            <button id="summaryToggleCircleBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg shadow-sm text-xs flex items-center justify-center gap-1">
+                                <span>🔵 외접원(Circle) 보이기 / 숨기기</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quick Info Bar at bottom of sidebar -->
+            <div class="p-3 bg-slate-100 border-t border-slate-200 text-xs text-slate-500 text-center">
+                <span id="triangleTypeLabel" class="font-semibold text-slate-700">삼각형 종류: -</span>
+            </div>
+        </aside>
+
+        <!-- Right Main Interactive Canvas Area -->
+        <section class="flex-1 flex flex-col relative bg-slate-200 overflow-hidden">
+            
+            <!-- Floating Canvas Toolbar -->
+            <div class="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-xl shadow-md border border-slate-200 flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-600 px-2">도구:</span>
+                <span id="currentToolHint" class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2.5 py-1 rounded-lg">
+                    모눈 클릭하여 점 A, B, C 찍기
+                </span>
+                <button id="snapGridBtn" class="text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-2 py-1 rounded-lg transition">
+                    📍 모눈 스냅: ON
+                </button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div id="canvasContainer" class="flex-1 w-full h-full relative cursor-pointer grid-bg overflow-hidden flex items-center justify-center">
+                <svg id="svgBoard" class="w-full h-full absolute inset-0">
+                    <!-- SVG elements dynamically generated by JS -->
+                </svg>
+
+                <!-- Interactive overlay guide message -->
+                <div id="interactivePrompt" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/80 text-white text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none transition-all duration-300 backdrop-blur-sm">
+                    💡 모눈 위에 첫 번째 점(A)을 클릭하여 만드세요.
+                </div>
+            </div>
+
+            <!-- Bottom Control Presets -->
+            <div class="bg-white border-t border-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-2 z-10 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-600">삼각형 모양 예시:</span>
+                    <button id="btnAcute" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 border border-slate-300 text-slate-700 rounded-md">예각삼각형</button>
+                    <button id="btnRight" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 border border-slate-300 text-slate-700 rounded-md">직각삼각형 (빗변 중점)</button>
+                    <button id="btnObtuse" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 border border-slate-300 text-slate-700 rounded-md">둔각삼각형 (외부)</button>
+                </div>
+                <div class="text-slate-500">
+                    * 탐구 완료 후 꼭짓점을 드래그하여 외심의 위치를 실험해보세요!
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // Global Application State
+        const state = {
+            step: 1, // Steps 1 to 5, 6 = Summary / Free Drag Mode
+            points: {
+                A: null, // {x, y}
+                B: null,
+                C: null,
+                O: null  // Calculated circumcenter
+            },
+            bisectors: {
+                AB: false,
+                BC: false,
+                CA: false
+            },
+            circumcenterPlaced: false, // Step 3
+            selectedPointForSegment: null, // For Step 4 (e.g. 'O')
+            segments: {
+                OA: false,
+                OB: false,
+                OC: false
+            },
+            lengthsMeasured: {
+                OA: false,
+                OB: false,
+                OC: false
+            },
+            showCircumcircle: false,
+            snapToGrid: true,
+            gridSize: 20,
+            draggingPoint: null
+        };
+
+        // DOM Element Cache
+        const svg = document.getElementById('svgBoard');
+        const container = document.getElementById('canvasContainer');
+        const promptEl = document.getElementById('interactivePrompt');
+        const toolHint = document.getElementById('currentToolHint');
+        const snapBtn = document.getElementById('snapGridBtn');
+
+        // Web Audio API for interactive sound effects
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'step') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'success') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(f, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.15, now + idx * 0.08);
+                        g.gain.linearRampToValueAtTime(0, now + idx * 0.08 + 0.2);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.2);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function computeCircumcenter(A, B, C) {
+            const D = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+            if (Math.abs(D) < 0.001) return null;
+
+            const Ux = ((A.x * A.x + A.y * A.y) * (B.y - C.y) + (B.x * B.x + B.y * B.y) * (C.y - A.y) + (C.x * C.x + C.y * C.y) * (A.y - B.y)) / D;
+            const Uy = ((A.x * A.x + A.y * A.y) * (C.x - B.x) + (B.x * B.x + B.y * B.y) * (A.x - C.x) + (C.x * C.x + C.y * C.y) * (B.x - A.x)) / D;
+
+            return { x: Ux, y: Uy };
+        }
+
+        function dist(p1, p2) {
+            return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        }
+
+        function formatDistance(pixels) {
+            const cm = pixels / 20;
+            return cm.toFixed(1) + ' cm';
+        }
+
+        function midpoint(p1, p2) {
+            return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+        }
+
+        function distToSegment(P, A, B) {
+            const l2 = (B.x - A.x) ** 2 + (B.y - A.y) ** 2;
+            if (l2 === 0) return dist(P, A);
+            let t = ((P.x - A.x) * (B.x - A.x) + (P.y - A.y) * (B.y - A.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const proj = { x: A.x + t * (B.x - A.x), y: A.y + t * (B.y - A.y) };
+            return dist(P, proj);
+        }
+
+        function getTriangleType(A, B, C) {
+            const a2 = dist(B, C) ** 2;
+            const b2 = dist(A, C) ** 2;
+            const c2 = dist(A, B) ** 2;
+
+            const sides = [a2, b2, c2].sort((x, y) => x - y);
+            const sumShort = sides[0] + sides[1];
+            const long = sides[2];
+
+            const diff = Math.abs(sumShort - long);
+            if (diff < 10) {
+                return { type: '직각삼각형', pos: '빗변의 중점에 위치' };
+            } else if (sumShort > long) {
+                return { type: '예각삼각형', pos: '삼각형 내부에 위치' };
+            } else {
+                return { type: '둔각삼각형', pos: '삼각형 외부에 위치' };
+            }
+        }
+
+        function getCanvasCoords(e) {
+            const rect = svg.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            let x = clientX - rect.left;
+            let y = clientY - rect.top;
+
+            if (state.snapToGrid) {
+                x = Math.round(x / state.gridSize) * state.gridSize;
+                y = Math.round(y / state.gridSize) * state.gridSize;
+            }
+
+            return { x, y };
+        }
+
+        function handleStep5Logic(measured) {
+            if (measured) {
+                playSound('click');
+                updateStep5UI();
+                if (state.lengthsMeasured.OA && state.lengthsMeasured.OB && state.lengthsMeasured.OC) {
+                    if (state.step === 5) {
+                        playSound('success');
+                        state.showCircumcircle = true;
+                        showConclusionUI();
+                    }
+                }
+                render();
+            }
+        }
+
+        function handleCanvasClick(e) {
+            const pos = getCanvasCoords(e);
+
+            if (state.step === 1) {
+                if (!state.points.A) {
+                    state.points.A = pos;
+                    playSound('click');
+                    updateStep1UI();
+                } else if (!state.points.B) {
+                    if (dist(pos, state.points.A) > 15) {
+                        state.points.B = pos;
+                        playSound('click');
+                        updateStep1UI();
+                    }
+                } else if (!state.points.C) {
+                    if (dist(pos, state.points.A) > 15 && dist(pos, state.points.B) > 15) {
+                        state.points.C = pos;
+                        playSound('step');
+                        state.points.O = computeCircumcenter(state.points.A, state.points.B, state.points.C);
+                        advanceToStep(2);
+                    }
+                }
+                render();
+                return;
+            }
+
+            if (state.step === 2) {
+                const threshold = 18;
+                const dAB = distToSegment(pos, state.points.A, state.points.B);
+                const dBC = distToSegment(pos, state.points.B, state.points.C);
+                const dCA = distToSegment(pos, state.points.C, state.points.A);
+
+                let clicked = false;
+                if (dAB < threshold && !state.bisectors.AB) {
+                    state.bisectors.AB = true;
+                    clicked = true;
+                } else if (dBC < threshold && !state.bisectors.BC) {
+                    state.bisectors.BC = true;
+                    clicked = true;
+                } else if (dCA < threshold && !state.bisectors.CA) {
+                    state.bisectors.CA = true;
+                    clicked = true;
+                }
+
+                if (clicked) {
+                    playSound('click');
+                    updateStep2UI();
+                    if (state.bisectors.AB && state.bisectors.BC && state.bisectors.CA) {
+                        playSound('step');
+                        advanceToStep(3);
+                    }
+                    render();
+                }
+                return;
+            }
+
+            if (state.step === 3) {
+                if (state.points.O) {
+                    const dO = dist(pos, state.points.O);
+                    if (dO < 25) {
+                        state.circumcenterPlaced = true;
+                        playSound('step');
+                        advanceToStep(4);
+                        render();
+                    }
+                }
+                return;
+            }
+
+            if (state.step === 4) {
+                const dO = state.points.O ? dist(pos, state.points.O) : 999;
+                const dA = dist(pos, state.points.A);
+                const dB = dist(pos, state.points.B);
+                const dC = dist(pos, state.points.C);
+
+                if (dO < 20) {
+                    state.selectedPointForSegment = 'O';
+                    playSound('click');
+                    render();
+                    return;
+                }
+
+                if (state.selectedPointForSegment === 'O') {
+                    let connected = false;
+                    if (dA < 20 && !state.segments.OA) {
+                        state.segments.OA = true;
+                        connected = true;
+                    } else if (dB < 20 && !state.segments.OB) {
+                        state.segments.OB = true;
+                        connected = true;
+                    } else if (dC < 20 && !state.segments.OC) {
+                        state.segments.OC = true;
+                        connected = true;
+                    }
+
+                    if (connected) {
+                        playSound('click');
+                        state.selectedPointForSegment = null;
+                        updateStep4UI();
+                        if (state.segments.OA && state.segments.OB && state.segments.OC) {
+                            playSound('step');
+                            advanceToStep(5);
+                        }
+                        render();
+                    }
+                }
+                return;
+            }
+
+            if (state.step === 5 || state.step === 6) {
+                if (!state.points.O) return;
+                const dOA = distToSegment(pos, state.points.O, state.points.A);
+                const dOB = distToSegment(pos, state.points.O, state.points.B);
+                const dOC = distToSegment(pos, state.points.O, state.points.C);
+
+                let measured = false;
+                const threshold = 15;
+
+                if (dOA < threshold && !state.lengthsMeasured.OA) {
+                    state.lengthsMeasured.OA = true;
+                    measured = true;
+                } else if (dOB < threshold && !state.lengthsMeasured.OB) {
+                    state.lengthsMeasured.OB = true;
+                    measured = true;
+                } else if (dOC < threshold && !state.lengthsMeasured.OC) {
+                    state.lengthsMeasured.OC = true;
+                    measured = true;
+                }
+
+                handleStep5Logic(measured);
+            }
+        }
+
+        function handleMouseDown(e) {
+            if (state.step < 6) return;
+            const pos = getCanvasCoords(e);
+            const pts = ['A', 'B', 'C'];
+            for (let name of pts) {
+                if (state.points[name] && dist(pos, state.points[name]) < 18) {
+                    state.draggingPoint = name;
+                    container.style.cursor = 'grabbing';
+                    break;
+                }
+            }
+        }
+
+        function handleMouseMove(e) {
+            const pos = getCanvasCoords(e);
+
+            if (state.draggingPoint) {
+                container.style.cursor = 'grabbing';
+                state.points[state.draggingPoint] = pos;
+                state.points.O = computeCircumcenter(state.points.A, state.points.B, state.points.C);
+                updateStep5UI();
+                render();
+                return;
+            }
+
+            let isHoverable = false;
+            const threshold = 18;
+
+            if (state.step === 1) {
+                isHoverable = true;
+            } else if (state.step === 2) {
+                if (state.points.A && state.points.B && state.points.C) {
+                    const dAB = distToSegment(pos, state.points.A, state.points.B);
+                    const dBC = distToSegment(pos, state.points.B, state.points.C);
+                    const dCA = distToSegment(pos, state.points.C, state.points.A);
+                    if ((dAB < threshold && !state.bisectors.AB) ||
+                        (dBC < threshold && !state.bisectors.BC) ||
+                        (dCA < threshold && !state.bisectors.CA)) {
+                        isHoverable = true;
+                    }
+                }
+            } else if (state.step === 3) {
+                if (state.points.O && dist(pos, state.points.O) < 25) {
+                    isHoverable = true;
+                }
+            } else if (state.step === 4) {
+                const dO = state.points.O ? dist(pos, state.points.O) : 999;
+                if (!state.selectedPointForSegment) {
+                    if (dO < 20) isHoverable = true;
+                } else {
+                    const dA = dist(pos, state.points.A);
+                    const dB = dist(pos, state.points.B);
+                    const dC = dist(pos, state.points.C);
+                    if ((dA < 20 && !state.segments.OA) ||
+                        (dB < 20 && !state.segments.OB) ||
+                        (dC < 20 && !state.segments.OC)) {
+                        isHoverable = true;
+                    }
+                }
+            } else if (state.step === 5) {
+                if (state.points.O) {
+                    const dOA = distToSegment(pos, state.points.O, state.points.A);
+                    const dOB = distToSegment(pos, state.points.O, state.points.B);
+                    const dOC = distToSegment(pos, state.points.O, state.points.C);
+                    if ((dOA < 15 && !state.lengthsMeasured.OA) ||
+                        (dOB < 15 && !state.lengthsMeasured.OB) ||
+                        (dOC < 15 && !state.lengthsMeasured.OC)) {
+                        isHoverable = true;
+                    }
+                }
+            } else if (state.step === 6) {
+                const pts = ['A', 'B', 'C'];
+                for (let name of pts) {
+                    if (state.points[name] && dist(pos, state.points[name]) < 18) {
+                        container.style.cursor = 'grab';
+                        return;
+                    }
+                }
+            }
+
+            container.style.cursor = isHoverable ? 'pointer' : 'default';
+        }
+
+        function handleMouseUp() {
+            if (state.draggingPoint) {
+                container.style.cursor = 'grab';
+            }
+            state.draggingPoint = null;
+        }
+
+        function advanceToStep(nextStep) {
+            state.step = nextStep;
+            updateStepCardsUI();
+        }
+
+        function updateStep1UI() {
+            const count = (state.points.A ? 1 : 0) + (state.points.B ? 1 : 0) + (state.points.C ? 1 : 0);
+            const remaining = 3 - count;
+            const status = document.getElementById('step1Status');
+            if (remaining > 0) {
+                status.textContent = `남은 점: ${remaining}개 클릭 필요`;
+            } else {
+                status.textContent = `✅ 삼각형 ABC 완성!`;
+                status.className = "mt-2 text-xs font-semibold text-emerald-700 bg-emerald-100 py-1 px-2.5 rounded-md inline-block";
+            }
+            
+            if (count === 0) toolHint.textContent = "모눈을 클릭하여 점 A를 지정하세요";
+            else if (count === 1) toolHint.textContent = "모눈을 클릭하여 점 B를 지정하세요";
+            else if (count === 2) toolHint.textContent = "모눈을 클릭하여 점 C를 지정하세요";
+        }
+
+        function updateStep2UI() {
+            const abB = document.getElementById('sideABBadge');
+            const bcB = document.getElementById('sideBCBadge');
+            const caB = document.getElementById('sideCABadge');
+
+            if (state.bisectors.AB) abB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+            if (state.bisectors.BC) bcB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+            if (state.bisectors.CA) caB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+        }
+
+        function updateStep4UI() {
+            const oaB = document.getElementById('segOABadge');
+            const obB = document.getElementById('segOBBadge');
+            const ocB = document.getElementById('segOCBadge');
+
+            if (state.segments.OA) oaB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+            if (state.segments.OB) obB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+            if (state.segments.OC) ocB.className = "py-1 bg-indigo-600 text-white font-bold rounded";
+        }
+
+        function updateStep5UI() {
+            if (!state.points.O || !state.points.A) return;
+            const rOA = dist(state.points.O, state.points.A);
+            const rOB = dist(state.points.O, state.points.B);
+            const rOC = dist(state.points.O, state.points.C);
+
+            const txtOA = state.lengthsMeasured.OA ? formatDistance(rOA) : '미측정 (클릭)';
+            const txtOB = state.lengthsMeasured.OB ? formatDistance(rOB) : '미측정 (클릭)';
+            const txtOC = state.lengthsMeasured.OC ? formatDistance(rOC) : '미측정 (클릭)';
+
+            document.getElementById('valOA').textContent = txtOA;
+            document.getElementById('valOB').textContent = txtOB;
+            document.getElementById('valOC').textContent = txtOC;
+
+            if (state.lengthsMeasured.OA) document.getElementById('lenOABox').className = "flex justify-between items-center bg-indigo-50 border border-indigo-200 p-1.5 rounded";
+            if (state.lengthsMeasured.OB) document.getElementById('lenOBBox').className = "flex justify-between items-center bg-indigo-50 border border-indigo-200 p-1.5 rounded";
+            if (state.lengthsMeasured.OC) document.getElementById('lenOCBox').className = "flex justify-between items-center bg-indigo-50 border border-indigo-200 p-1.5 rounded";
+        }
+
+        function updateStepCardsUI() {
+            if (state.step === 6) {
+                document.getElementById('stepBadge').textContent = `최종 정리 단계`;
+            } else {
+                document.getElementById('stepBadge').textContent = `${Math.min(state.step, 5)} / 5 단계 진행 중`;
+            }
+
+            for (let i = 1; i <= 5; i++) {
+                const card = document.getElementById(`stepCard${i}`);
+                const num = document.getElementById(`stepNum${i}`);
+
+                if (i < state.step) {
+                    card.className = "step-card border border-emerald-300 bg-emerald-50/60 p-4 rounded-xl opacity-90 transition-all";
+                    num.className = "w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shrink-0";
+                    num.textContent = "✓";
+                } else if (i === state.step) {
+                    card.className = "step-card border-2 border-indigo-500 bg-indigo-50 p-4 rounded-xl shadow-md transition-all";
+                    num.className = "w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0";
+                    num.textContent = i;
+                } else {
+                    card.className = "step-card border-2 border-slate-200 bg-slate-50 p-4 rounded-xl opacity-50 transition-all";
+                    num.className = "w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0";
+                    num.textContent = i;
+                }
+            }
+
+            if (state.step === 1) {
+                toolHint.textContent = "모눈 클릭하여 점 A, B, C 찍기";
+                promptEl.textContent = "💡 모눈 위 3곳을 클릭하여 삼각형 ABC를 완성하세요.";
+            } else if (state.step === 2) {
+                toolHint.textContent = "삼각형의 각 변 클릭하기";
+                promptEl.textContent = "💡 변 AB, BC, CA를 눌러 수직이등분선을 그려보세요.";
+            } else if (state.step === 3) {
+                toolHint.textContent = "교점(외심) 클릭하기";
+                promptEl.textContent = "💡 세 수직이등분선이 만나는 깜빡이는 교점을 누르세요!";
+            } else if (state.step === 4) {
+                toolHint.textContent = "점 O 누른 후 A, B, C 클릭";
+                promptEl.textContent = "💡 점 O를 먼저 누르고, 꼭짓점 A, B, C를 각각 클릭하여 선분을 연결하세요.";
+            } else if (state.step === 5) {
+                toolHint.textContent = "선분 OA, OB, OC 클릭하기";
+                promptEl.textContent = "💡 선분 OA, OB, OC를 눌러 각각의 길이를 측정하세요.";
+            } else if (state.step === 6) {
+                toolHint.textContent = "정리 및 자유 탐구 모드";
+                promptEl.textContent = "🎓 최종 정리 완료! 점 A, B, C를 자유롭게 드래그해보세요.";
+            }
+        }
+
+        function showConclusionUI() {
+            document.getElementById('conclusionBox').classList.remove('hidden');
+        }
+
+        function showSummaryUI() {
+            document.getElementById('conclusionBox').classList.add('hidden');
+            document.getElementById('summarySection').classList.remove('hidden');
+        }
+
+        function render() {
+            svg.innerHTML = '';
+
+            const { A, B, C, O } = state.points;
+
+            if (A && B && C) {
+                const info = getTriangleType(A, B, C);
+                document.getElementById('triangleTypeLabel').textContent = `삼각형 종류: ${info.type} (${info.pos})`;
+            }
+
+            if (state.showCircumcircle && A && B && C && O) {
+                const radius = dist(O, A);
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', O.x);
+                circle.setAttribute('cy', O.y);
+                circle.setAttribute('r', radius);
+                circle.setAttribute('fill', 'rgba(99, 102, 241, 0.08)');
+                circle.setAttribute('stroke', '#4f46e5');
+                circle.setAttribute('stroke-width', '2');
+                circle.setAttribute('stroke-dasharray', '6 4');
+                svg.appendChild(circle);
+            }
+
+            if (A && B && C) {
+                const sidePairs = [
+                    { key: 'AB', p1: A, p2: B, active: state.bisectors.AB },
+                    { key: 'BC', p1: B, p2: C, active: state.bisectors.BC },
+                    { key: 'CA', p1: C, p2: A, active: state.bisectors.CA }
+                ];
+
+                sidePairs.forEach(({ p1, p2, active }) => {
+                    if (!active) return;
+
+                    const mid = midpoint(p1, p2);
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+
+                    const len = Math.hypot(dx, dy);
+                    const perpX = -dy / len;
+                    const perpY = dx / len;
+
+                    const extendLen = 800;
+                    const lineP1 = { x: mid.x + perpX * extendLen, y: mid.y + perpY * extendLen };
+                    const lineP2 = { x: mid.x - perpX * extendLen, y: mid.y - perpY * extendLen };
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', lineP1.x);
+                    line.setAttribute('y1', lineP1.y);
+                    line.setAttribute('x2', lineP2.x);
+                    line.setAttribute('y2', lineP2.y);
+                    line.setAttribute('stroke', '#3b82f6');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', '4 3');
+                    svg.appendChild(line);
+
+                    const raSize = 10;
+                    const raPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const ux = dx / len;
+                    const uy = dy / len;
+                    const rx1 = mid.x + ux * raSize;
+                    const ry1 = mid.y + uy * raSize;
+                    const rx2 = rx1 + perpX * raSize;
+                    const ry2 = ry1 + perpY * raSize;
+                    const rx3 = mid.x + perpX * raSize;
+                    const ry3 = mid.y + perpY * raSize;
+
+                    raPath.setAttribute('d', `M ${mid.x} ${mid.y} L ${rx1} ${ry1} L ${rx2} ${ry2} L ${rx3} ${ry3} Z`);
+                    raPath.setAttribute('fill', 'none');
+                    raPath.setAttribute('stroke', '#2563eb');
+                    raPath.setAttribute('stroke-width', '1.5');
+                    svg.appendChild(raPath);
+                });
+            }
+
+            if (A && B) drawSegment(A, B, '#475569', 3, state.step === 2 && !state.bisectors.AB);
+            if (B && C) drawSegment(B, C, '#475569', 3, state.step === 2 && !state.bisectors.BC);
+            if (C && A) drawSegment(C, A, '#475569', 3, state.step === 2 && !state.bisectors.CA);
+
+            if (state.circumcenterPlaced && O) {
+                const segs = [
+                    { name: 'OA', target: A, active: state.segments.OA, measured: state.lengthsMeasured.OA },
+                    { name: 'OB', target: B, active: state.segments.OB, measured: state.lengthsMeasured.OB },
+                    { name: 'OC', target: C, active: state.segments.OC, measured: state.lengthsMeasured.OC }
+                ];
+
+                segs.forEach(({ target, active, measured }) => {
+                    if (!active) return;
+                    const color = measured ? '#d97706' : '#f59e0b';
+                    const width = measured ? 3.5 : 2.5;
+                    const isClickable = !measured && (state.step === 5 || state.step === 6);
+
+                    drawSegment(O, target, color, width, isClickable);
+
+                    if (measured) {
+                        const mid = midpoint(O, target);
+                        const distance = formatDistance(dist(O, target));
+
+                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', mid.x - 30);
+                        rect.setAttribute('y', mid.y - 12);
+                        rect.setAttribute('width', 60);
+                        rect.setAttribute('height', 22);
+                        rect.setAttribute('rx', 6);
+                        rect.setAttribute('fill', '#fff');
+                        rect.setAttribute('stroke', '#f59e0b');
+                        rect.setAttribute('stroke-width', '1.5');
+
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', mid.x);
+                        text.setAttribute('y', mid.y + 4);
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('font-size', '11');
+                        text.setAttribute('font-weight', 'bold');
+                        text.setAttribute('fill', '#b45309');
+                        text.textContent = distance;
+
+                        g.appendChild(rect);
+                        g.appendChild(text);
+                        svg.appendChild(g);
+                    }
+                });
+            }
+
+            if (state.step === 3 && O) {
+                const targetG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                const pulseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                pulseCircle.setAttribute('cx', O.x);
+                pulseCircle.setAttribute('cy', O.y);
+                pulseCircle.setAttribute('r', '16');
+                pulseCircle.setAttribute('fill', 'rgba(239, 68, 68, 0.3)');
+                pulseCircle.setAttribute('stroke', '#ef4444');
+                pulseCircle.setAttribute('stroke-width', '2');
+                pulseCircle.setAttribute('class', 'pulse-target cursor-pointer');
+
+                targetG.appendChild(pulseCircle);
+                svg.appendChild(targetG);
+            }
+
+            const isStep4 = state.step === 4;
+            const isOSelected = state.selectedPointForSegment === 'O';
+
+            if (A) drawVertex(A, 'A', '#4f46e5', false, isStep4 && isOSelected && !state.segments.OA);
+            if (B) drawVertex(B, 'B', '#4f46e5', false, isStep4 && isOSelected && !state.segments.OB);
+            if (C) drawVertex(C, 'C', '#4f46e5', false, isStep4 && isOSelected && !state.segments.OC);
+
+            if (state.circumcenterPlaced && O) {
+                const isSelected = state.selectedPointForSegment === 'O';
+                const isOPulsing = isStep4 && !isSelected;
+                drawVertex(O, 'O', '#dc2626', isSelected, isOPulsing);
+            }
+        }
+
+        function drawSegment(p1, p2, color, width, isInteractive = false) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', p1.x);
+            line.setAttribute('y1', p1.y);
+            line.setAttribute('x2', p2.x);
+            line.setAttribute('y2', p2.y);
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', width);
+            line.setAttribute('stroke-linecap', 'round');
+            if (isInteractive) {
+                line.setAttribute('class', 'cursor-pointer hover:stroke-indigo-600 hover:stroke-[5] transition-all');
+            }
+            svg.appendChild(line);
+        }
+
+        function drawVertex(p, name, color, isHighlighted = false, isPulsing = false) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+            if (isPulsing) {
+                const pulseRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                pulseRing.setAttribute('cx', p.x);
+                pulseRing.setAttribute('cy', p.y);
+                pulseRing.setAttribute('r', '16');
+                pulseRing.setAttribute('fill', 'rgba(239, 68, 68, 0.2)');
+                pulseRing.setAttribute('stroke', color);
+                pulseRing.setAttribute('stroke-width', '2.5');
+                pulseRing.setAttribute('class', 'pulse-target');
+                g.appendChild(pulseRing);
+            }
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', p.x);
+            circle.setAttribute('cy', p.y);
+            circle.setAttribute('r', isHighlighted ? 10 : 8);
+            circle.setAttribute('fill', color);
+            circle.setAttribute('stroke', '#ffffff');
+            circle.setAttribute('stroke-width', '2.5');
+
+            let cursorClass = 'transition-all duration-150';
+            if (state.step === 6) {
+                cursorClass += ' cursor-grab active:cursor-grabbing hover:stroke-indigo-300 hover:stroke-[4]';
+            } else {
+                cursorClass += ' cursor-pointer hover:stroke-indigo-300 hover:stroke-[4]';
+            }
+            circle.setAttribute('class', cursorClass);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', p.x + 12);
+            text.setAttribute('y', p.y - 10);
+            text.setAttribute('font-size', '15');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', color);
+            text.setAttribute('class', 'pointer-events-none select-none');
+            text.textContent = name;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            svg.appendChild(g);
+        }
+
+        function setPresetTriangle(type) {
+            const rect = svg.getBoundingClientRect();
+            const cx = rect.width / 2 || 300;
+            const cy = rect.height / 2 || 250;
+
+            if (type === 'acute') {
+                state.points.A = { x: cx, y: cy - 120 };
+                state.points.B = { x: cx - 140, y: cy + 100 };
+                state.points.C = { x: cx + 140, y: cy + 100 };
+            } else if (type === 'right') {
+                state.points.A = { x: cx - 120, y: cy - 100 };
+                state.points.B = { x: cx - 120, y: cy + 100 };
+                state.points.C = { x: cx + 140, y: cy + 100 };
+            } else if (type === 'obtuse') {
+                state.points.A = { x: cx - 60, y: cy - 40 };
+                state.points.B = { x: cx - 160, y: cy + 120 };
+                state.points.C = { x: cx + 160, y: cy + 120 };
+            }
+
+            state.points.O = computeCircumcenter(state.points.A, state.points.B, state.points.C);
+            updateStep1UI();
+
+            if (state.step > 1) {
+                render();
+            } else {
+                advanceToStep(2);
+                render();
+            }
+        }
+
+        function resetAll() {
+            state.step = 1;
+            state.points.A = null;
+            state.points.B = null;
+            state.points.C = null;
+            state.points.O = null;
+            state.bisectors.AB = false;
+            state.bisectors.BC = false;
+            state.bisectors.CA = false;
+            state.circumcenterPlaced = false;
+            state.selectedPointForSegment = null;
+            state.segments.OA = false;
+            state.segments.OB = false;
+            state.segments.OC = false;
+            state.lengthsMeasured.OA = false;
+            state.lengthsMeasured.OB = false;
+            state.lengthsMeasured.OC = false;
+            state.showCircumcircle = false;
+
+            document.getElementById('conclusionBox').classList.add('hidden');
+            document.getElementById('summarySection').classList.add('hidden');
+            document.getElementById('triangleTypeLabel').textContent = "삼각형 종류: -";
+
+            ['AB', 'BC', 'CA'].forEach(k => {
+                document.getElementById(`side${k}Badge`).className = "py-1 bg-slate-200 rounded text-slate-500 font-medium";
+            });
+            ['OA', 'OB', 'OC'].forEach(k => {
+                document.getElementById(`seg${k}Badge`).className = "py-1 bg-slate-200 rounded text-slate-500 font-medium";
+            });
+            ['OA', 'OB', 'OC'].forEach(k => {
+                document.getElementById(`val${k}`).textContent = "미측정";
+                document.getElementById(`len${k}Box`).className = "flex justify-between items-center bg-slate-200 p-1.5 rounded";
+            });
+
+            updateStep1UI();
+            updateStepCardsUI();
+            render();
+            playSound('click');
+        }
+
+        window.addEventListener('load', () => {
+            svg.addEventListener('click', handleCanvasClick);
+            svg.addEventListener('mousedown', handleMouseDown);
+            svg.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+
+            svg.addEventListener('touchstart', (e) => handleMouseDown(e));
+            svg.addEventListener('touchmove', (e) => handleMouseMove(e));
+            svg.addEventListener('touchend', handleMouseUp);
+
+            document.getElementById('resetAllBtn').addEventListener('click', resetAll);
+
+            document.getElementById('goToSummaryBtn').addEventListener('click', () => {
+                state.step = 6;
+                playSound('step');
+                showSummaryUI();
+                updateStepCardsUI();
+                render();
+            });
+
+            const summaryCircleBtn = document.getElementById('summaryToggleCircleBtn');
+            if (summaryCircleBtn) {
+                summaryCircleBtn.addEventListener('click', () => {
+                    state.showCircumcircle = !state.showCircumcircle;
+                    playSound('click');
+                    render();
+                });
+            }
+
+            snapBtn.addEventListener('click', () => {
+                state.snapToGrid = !state.snapToGrid;
+                snapBtn.textContent = state.snapToGrid ? "📍 모눈 스냅: ON" : "📍 모눈 스냅: OFF";
+                snapBtn.className = state.snapToGrid ? 
+                    "text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-2 py-1 rounded-lg transition" :
+                    "text-xs bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-lg transition";
+            });
+
+            document.getElementById('btnAcute').addEventListener('click', () => setPresetTriangle('acute'));
+            document.getElementById('btnRight').addEventListener('click', () => setPresetTriangle('right'));
+            document.getElementById('btnObtuse').addEventListener('click', () => setPresetTriangle('obtuse'));
+
+            updateStep1UI();
+            updateStepCardsUI();
+            render();
+        });
+
+        window.addEventListener('resize', () => {
+            render();
+        });
+    </script>
+</body>
+</html>
+"""
+
+components.html(HTML_CODE, height=880, scrolling=True)
+```
+```text:의존성 패키지 목록:requirements.txt
+streamlit>=1.28.0
